@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, blockQuote } from 'discord.js';
-import { readFileSync, writeFileSync, existsSync, closeSync, openSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, closeSync, openSync, mkdirSync } from 'fs';
 import { schedule } from "node-cron";
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
@@ -300,6 +300,10 @@ client.on('interactionCreate', async interaction => {
 });
 
 const onReady = async () => {
+    if (!existsSync('json')) {
+        mkdirSync('json', { recursive: true });
+    }
+
     if (!existsSync('json/lastId.json')) {
         closeSync(openSync('json/lastId.json', 'w'))
         writeFileSync('json/lastId.json', JSON.stringify({ "id": "0" }));
