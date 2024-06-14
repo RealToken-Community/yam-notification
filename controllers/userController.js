@@ -67,7 +67,7 @@ class UserController {
 
             const user = {};
 
-            if (deltaMin) {
+            if (deltaMin !== null && deltaMin !== undefined) {
                 const deltaMinFloat = +deltaMin;
 
                 if (isNaN(deltaMinFloat)) {
@@ -77,7 +77,7 @@ class UserController {
                 user.deltaMin = deltaMinFloat;
             }
 
-            if (quantityMin) {
+            if (quantityMin !== null && quantityMin !== undefined) {
                 user.quantityMin = quantityMin;
             }
 
