@@ -10,7 +10,7 @@ import UserController from '../controllers/userController.js';
 import commands from './commands.js';
 
 const {
-    env,
+    NODE_ENV,
     userTestId,
     token,
     information,
@@ -40,7 +40,7 @@ const blockQuoteContent = (delta, quantity, id, name) => {
 
 const yamOffer = async () => {
     const guild = client.guilds.cache.get(guildId);
-    
+
     const offers = await RealtController.getOffers({
         first: 50,
         orderBy: 'id',
@@ -83,11 +83,16 @@ const yamOffer = async () => {
 
         let deltaPrice = (initialPrice / offer.price.price) * 100 - 100;
 
-        const users = env === 'prod' ? await UserController.getUsersFromParams({
-            deltaPrice: deltaPrice * -1,
-            availableAmount,
-            blacklist: address
-        }) : env === 'dev' && userTestId ? [{ userId: userTestId }] : [];
+        const users = NODE_ENV === 'prod' ? (
+            await UserController.getUsersFromParams({
+                deltaPrice: deltaPrice * -1,
+                availableAmount,
+                blacklist: address
+            })
+        ) : (
+            NODE_ENV === 'dev' && userTestId
+        ) ? (
+            [{ userId: userTestId }]) : [];
 
         if (!users?.length) {
             continue;
