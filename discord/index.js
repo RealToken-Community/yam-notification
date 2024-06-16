@@ -11,13 +11,15 @@ import commands from './commands.js';
 
 const {
     NODE_ENV,
-    userTestId,
-    token,
-    information,
-    alert,
-    guildId,
-    applicationId,
-    channel_commands
+    USER_TEST_ID,
+    TOKEN,
+    ROLE_ALERT,
+    ROLE_FR,
+    ROLE_EN,
+    GUILD_ID,
+    APPLICATION_ID,
+    CHANNEL_INFORMATION,
+    CHANNEL_COMMANDS,
 } = process.env;
 
 const client = new Client({
@@ -28,18 +30,28 @@ const client = new Client({
     ]
 });
 
+const flags = ['🇺🇸', '🇫🇷'];
 let lastIds = {};
 let params = {};
-let message1Id;
+let messageAlertId;
+let messageLanguageId;
 
-const blockQuoteContent = (delta, quantity, id, name) => {
-    const content = `:house_with_garden: :alarm_clock: Nouvelle offre intéressante sur le YAM :alarm_clock: :house_with_garden:\n:house_with_garden: ${name}\n\n${delta}\n:1234: Quantité disponible : ${quantity}\n\n:link: Lien pour y accéder : https://yam.realtoken.network/offer/${id}\n`;
+const blockQuoteContent = (delta, quantity, id, name, lang = 'en') => {
+    let content;
+    switch (lang) {
+        case 'fr':
+            content = `:house_with_garden: :alarm_clock: Nouvelle offre intéressante sur le YAM :alarm_clock: :house_with_garden:\n:house_with_garden: ${name}\n\n${delta}\n:1234: Quantité disponible : ${quantity}\n\n:link: Lien pour y accéder : https://yam.realtoken.network/offer/${id}\n`;
+            break;
+        case 'en':
+            content = `:house_with_garden: :alarm_clock: New interesting offer on the YAM :alarm_clock: :house_with_garden:\n:house_with_garden: ${name}\n\n${delta}\n:1234: Available quantity: ${quantity}\n\n:link: Link to access it: https://yam.realtoken.network/offer/${id}\n`;
+            break;
+    }
 
     return blockQuote(content);
 }
 
 const yamOffer = async () => {
-    const guild = client.guilds.cache.get(guildId);
+    const guild = client.guilds.cache.get(GUILD_ID);
 
     const offers = await RealtController.getOffers({
         first: 50,
@@ -90,25 +102,26 @@ const yamOffer = async () => {
                 blacklist: address
             })
         ) : (
-            NODE_ENV === 'dev' && userTestId
+            NODE_ENV === 'dev' && USER_TEST_ID
         ) ? (
-            [{ userId: userTestId }]) : [];
+            [{ userId: USER_TEST_ID, lang: 'fr' }]) : [];
 
         if (!users?.length) {
             continue;
         }
 
         if (Math.sign(deltaPrice) > -1) {
-            deltaPrice = `:green_circle: Delta de - ${deltaPrice.toFixed(2)} %`;
+            deltaPrice = `:green_circle: Delta of - ${deltaPrice.toFixed(2)} %`;
         } else {
-            deltaPrice = `:orange_circle: Delta de + ${deltaPrice.toFixed(2).slice(1)} %`;
+            deltaPrice = `:orange_circle: Delta of + ${deltaPrice.toFixed(2).slice(1)} %`;
         }
 
         for (const user of users) {
-            const member = await guild.members.fetch(user.userId);
+            const { lang, userId } = user;
+            const member = await guild.members.fetch(userId);
             if (!member) continue;
 
-            member.send(blockQuoteContent(deltaPrice, availableAmount, id, name));
+            member.send(blockQuoteContent(deltaPrice, availableAmount, id, name, lang));
         }
     };
 }
@@ -117,14 +130,16 @@ client.on('messageReactionAdd', async (reaction, user) => {
     try {
         if (user.bot) return;
 
-        if (reaction.message.id === message1Id && reaction.emoji.name === '⏰') {
+        const selectFlag = reaction.emoji.name;
+
+        if (reaction.message.id === messageAlertId && selectFlag === '⏰') {
             const guild = reaction.message.guild;
             if (!guild) return;
 
             const member = await guild.members.fetch(user.id);
             if (!member) return;
 
-            await member.roles.add(alert);
+            await member.roles.add(ROLE_ALERT);
 
             const { deltaMin, quantityMin, blacklist } = params.yamlowprice;
 
@@ -134,8 +149,45 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 quantityMin,
                 blacklist
             });
+            await user.send('You have activated alerts for YAM offers. To modify your alert settings, go to the channel <#' + CHANNEL_COMMANDS + '> and use the `/edit` command.');
+            return;
+        }
 
-            await user.send('Vous avez activé les alertes pour les offres du YAM. Pour modifier les paramètres de vos alertes, allez dans le channel <#' + channel_commands + '> et utilisez la commande `/edit`.');
+        if (reaction.message.id === messageLanguageId && flags.includes(selectFlag)) {
+            const guild = reaction.message.guild;
+            if (!guild) return;
+
+            const member = await guild.members.fetch(user.id);
+            if (!member) return;
+
+            const otherFlags = flags.filter((flag) => flag !== selectFlag);
+
+            for (const flag of otherFlags) {
+                reaction.message.reactions.cache.get(flag).users.remove(user.id);
+            }
+
+            switch (selectFlag) {
+                case '🇺🇸':
+                    member.roles.add(ROLE_EN);
+                    member.roles.remove(ROLE_FR);
+
+                    await UserController.editLang({
+                        userId: user.id,
+                        lang: 'en'
+                    });
+
+                    break;
+                case '🇫🇷':
+                    member.roles.add(ROLE_FR);
+                    member.roles.remove(ROLE_EN);
+
+                    await UserController.editLang({
+                        userId: user.id,
+                        lang: 'fr'
+                    });
+
+                    break;
+            }
         }
     } catch (error) {
         console.error(`Failed to add role: ${error}`);
@@ -146,20 +198,38 @@ client.on('messageReactionRemove', async (reaction, user) => {
     try {
         if (user.bot) return;
 
-        if (reaction.message.id === message1Id && reaction.emoji.name === '⏰') {
+        if (reaction.message.id === messageAlertId && reaction.emoji.name === '⏰') {
             const guild = reaction.message.guild;
             if (!guild) return;
 
             const member = await guild.members.fetch(user.id);
             if (!member) return;
 
-            await member.roles.remove(alert);
+            await member.roles.remove(ROLE_ALERT);
 
             await UserController.archiveUser({
                 userId: user.id
             });
 
-            await user.send('Vous avez désactivé les alertes pour les offres du YAM.');
+            await user.send('You have disabled alerts for YAM offers.');
+            return;
+        }
+
+        if (reaction.message.id === messageLanguageId && ['🇺🇸', '🇫🇷'].includes(reaction.emoji.name)) {
+            const guild = reaction.message.guild;
+            if (!guild) return;
+
+            const member = await guild.members.fetch(user.id);
+            if (!member) return;
+
+            switch (reaction.emoji.name) {
+                case '🇺🇸':
+                    await member.roles.remove(ROLE_EN);
+                    break;
+                case '🇫🇷':
+                    await member.roles.remove(ROLE_FR);
+                    break;
+            }
         }
     } catch (error) {
         console.error(`Failed to remove role: ${error}`);
@@ -167,7 +237,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 });
 
 client.on('messageCreate', async message => {
-    if (message.channelId !== channel_commands || message.author.bot) {
+    if (message.author.bot || CHANNEL_COMMANDS === message.channelId) {
         return;
     }
 
@@ -181,8 +251,8 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    if (channelId !== channel_commands) {
-        await interaction.reply({ content: `Vous ne pouvez exécuter cette commande que dans le channel <#${channel_commands}>.`, ephemeral: true });
+    if (channelId !== CHANNEL_COMMANDS) {
+        await interaction.reply({ content: `You can only execute this command in the channel <#${CHANNEL_COMMANDS}>.`, ephemeral: true });
         return;
     }
 
@@ -193,7 +263,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: `Vous n\'êtes pas enregistré. Veuillez vous enregistrer en cliquant sur la réaction ⏰ dans le channel <#${information}>.`, ephemeral: true });
+                await interaction.reply({ content: `You are not registered. Please register by clicking on the ⏰ reaction in the <#${CHANNEL_INFORMATION}> channel.`, ephemeral: true });
                 return;
             }
 
@@ -202,19 +272,19 @@ client.on('interactionCreate', async interaction => {
             const blacklistList = blacklist?.join('\n') || 'Aucune';
 
             const embed = {
-                "title": "Vos paramètres actuels pour les alertes",
+                "title": "Your current settings for alerts",
                 "color": 16711680,
                 "fields": [
                     {
-                        "name": "Valeur (en %) par rapport au prix initial du token que vous acceptez",
+                        "name": "Value (in %) relative to the initial token price that you accept",
                         "value": `${deltaMin}%`
                     },
                     {
-                        "name": "Quantité minimum (0 = accepte n'importe quelle quantité)",
+                        "name": "Minimum quantity (0 = accepts any quantity)",
                         "value": `${quantityMin}`
                     },
                     {
-                        "name": "Propriétés blacklistées",
+                        "name": "Blacklisted properties",
                         "value": `${blacklistList}`
                     }
                 ]
@@ -229,7 +299,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: 'Vous n\'êtes pas enregistré. Veuillez vous enregistrer en cliquant sur la réaction ⏰ dans le channel <#' + information + '>.', ephemeral: true });
+                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_INFORMATION + '> channel.', ephemeral: true });
                 return;
             }
 
@@ -254,7 +324,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: 'Vous n\'êtes pas enregistré. Veuillez vous enregistrer en cliquant sur la réaction ⏰ dans le channel <#' + information + '>.', ephemeral: true });
+                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_INFORMATION + '> channel.', ephemeral: true });
                 return;
             }
 
@@ -264,11 +334,11 @@ client.on('interactionCreate', async interaction => {
             })
 
             if (!blacklistAdd) {
-                await interaction.reply({ content: 'Erreur lors de l\'ajout de la propriété à la blacklist.', ephemeral: true });
+                await interaction.reply({ content: 'Error adding the property to the blacklist.', ephemeral: true });
                 return;
             }
 
-            await interaction.reply({ content: 'La propriété a été ajoutée à la blacklist.', ephemeral: true });
+            await interaction.reply({ content: 'The property has been added to the blacklist.', ephemeral: true });
             return;
         }
         case 'blacklist_delete': {
@@ -277,7 +347,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: 'Vous n\'êtes pas enregistré. Veuillez vous enregistrer en cliquant sur la réaction ⏰ dans le channel <#' + information + '>.', ephemeral: true });
+                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_INFORMATION + '> channel.', ephemeral: true });
                 return;
             }
 
@@ -287,15 +357,15 @@ client.on('interactionCreate', async interaction => {
             })
 
             if (!blacklistRemove) {
-                await interaction.reply({ content: 'Erreur lors de la suppression de la propriété de la blacklist.', ephemeral: true });
+                await interaction.reply({ content: 'Error removing the property from the blacklist.', ephemeral: true });
                 return;
             }
 
-            await interaction.reply({ content: 'La propriété a été supprimée de la blacklist.', ephemeral: true });
+            await interaction.reply({ content: 'The property has been removed from the blacklist.', ephemeral: true });
             return;
         }
         default:
-            await interaction.reply({ content: 'Commande inconnue.', ephemeral: true });
+            await interaction.reply({ content: 'Unknown command.', ephemeral: true });
     }
 });
 
@@ -334,74 +404,74 @@ const onReady = async () => {
 
     await RealtController.getTokens();
 
-    schedule('*/30 * * * * *', async () => {
-        await yamOffer();
-    });
+    const channelInformation = client.channels.cache.get(CHANNEL_INFORMATION);
+    if (!channelInformation) console.log('Channel not found');
 
-    const channel = client.channels.cache.get(information);
-    if (!channel) return console.log('Canal non trouvé');
-
-    const messages = [
-        "Pour recevoir les notifications sur les offres du YAM, cliquez sur la **réaction ⏰ ci-dessous.**",
+    const messagesInformation = [
+        "To receive notifications about YAM offers, click on the **⏰ reaction below.**",
+        "Hello, choose the language of your future alerts by reacting with one of the available flags.",
         {
-            "title": "Paramètres par défaut pour les alertes",
+            "title": "Default settings for alerts",
             "color": 16777215,
             "fields": [
                 {
-                    "name": "Valeur (en %) par rapport au prix initial du token que vous acceptez",
+                    "name": "Value (in %) relative to the initial token price that you accept",
                     "value": `${deltaMin}%`
                 },
                 {
-                    "name": "Quantité minimum (0 = accepte n'importe quelle quantité)",
+                    "name": "Minimum quantity (0 = accepts any quantity)",
                     "value": `${quantityMin}`
                 },
                 {
-                    "name": "Propriétés blacklistées",
-                    "value": "Aucune"
+                    "name": "Blacklisted properties",
+                    "value": "None"
                 }
             ]
         },
-        "Pour modifier les paramètres de vos alertes, allez dans le channel <#" + channel_commands + "> et utilisez la commande `/edit`."
-    ]
+        "To modify your alert settings, go to the <#" + CHANNEL_COMMANDS + "> channel and use the `/edit` command."
+    ];
 
-    const fetchedMessages = Array.from((await channel.messages.fetch({ after: '1', limit: messages.length })).values()).reverse();
+    const fetchedMessages = Array.from((await channelInformation.messages.fetch({ after: '1', limit: messagesInformation.length })).values()).reverse();
 
-    for (let i = 0; i < messages.length; i++) {
+    for (let i = 0; i < messagesInformation.length; i++) {
+        const type = typeof messagesInformation[i];
         let message;
-        const type = typeof messages[i];
 
         if (fetchedMessages[i]) {
             message = fetchedMessages[i];
-            if (type === 'string') {
-                await message.edit(messages[i]);
-            } else {
-                await message.edit({ embeds: [messages[i]] });
-            }
+            await message.edit(type === 'string' ? messagesInformation[i] : { embeds: [messagesInformation[i]] });
         } else {
-            if (type === 'string') {
-                message = await channel.send(messages[i]);
-            } else {
-                message = await channel.send({ embeds: [messages[i]] });
-            }
+            message = await channelInformation.send(type === 'string' ? messagesInformation[i] : { embeds: [messagesInformation[i]] });
         }
 
-        if (i === 0) {
-            await message.react('⏰');
-            message1Id = message.id;
+        switch (i) {
+            case 0:
+                await message.react('⏰');
+                messageAlertId = message.id;
+                break;
+            case 1:
+                await message.react('🇺🇸');
+                await message.react('🇫🇷');
+                messageLanguageId = message.id;
+                break;
         }
     }
 
-    const rest = new REST({ version: '9' }).setToken(token);
+    const rest = new REST({ version: '9' }).setToken(TOKEN);
     try {
         await rest.put(
-            Routes.applicationGuildCommands(applicationId, guildId),
+            Routes.applicationGuildCommands(APPLICATION_ID, GUILD_ID),
             { body: commands },
         );
     }
     catch (error) {
         console.error(error);
     }
+
+    schedule('*/30 * * * * *', async () => {
+        await yamOffer();
+    });
 }
 
 client.on("ready", onReady);
-client.login(token);
+client.login(TOKEN);

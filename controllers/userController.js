@@ -36,7 +36,8 @@ class UserController {
 
             const users = await mysqlQuery(`
             SELECT 
-                u.userId
+                u.userId,
+                u.lang
             FROM 
                 user u
             LEFT JOIN 
@@ -162,6 +163,22 @@ class UserController {
                     userId = ?
                     AND item = ?
             `, [userId, id]);
+
+            return true;
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    static editLang = async (request) => {
+        try {
+            const { userId, lang } = request;
+
+            await mysqlQuery(`
+                update user
+                set lang = ?
+                where userId = ?
+            `, [lang, userId]);
 
             return true;
         } catch (error) {
