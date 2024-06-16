@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, blockQuote } from 'discord.js';
+import { Client, GatewayIntentBits } from 'discord.js';
 import { readFileSync, writeFileSync, existsSync, closeSync, openSync, mkdirSync } from 'fs';
 import { schedule } from "node-cron";
 import { REST } from '@discordjs/rest';
@@ -36,18 +36,34 @@ let params = {};
 let messageAlertId;
 let messageLanguageId;
 
-const blockQuoteContent = (delta, quantity, id, name, lang = 'en') => {
+const blockQuoteContent = (delta, quantity, id, name, image, lang = 'en') => {
     let content;
     switch (lang) {
         case 'fr':
-            content = `:house_with_garden: :alarm_clock: Nouvelle offre intéressante sur le YAM :alarm_clock: :house_with_garden:\n:house_with_garden: ${name}\n\n${delta}\n:1234: Quantité disponible : ${quantity}\n\n:link: Lien pour y accéder : https://yam.realtoken.network/offer/${id}\n`;
+            content = {
+                title: name,
+                description: `${delta}\n:1234: Quantité disponible : ${quantity}\n\n:link: Lien pour y accéder : https://yam.realtoken.network/offer/${id}`,
+                color: 16777215,
+                timestamp: new Date(),
+                image: {
+                    url: image
+                }
+            }
             break;
         case 'en':
-            content = `:house_with_garden: :alarm_clock: New interesting offer on the YAM :alarm_clock: :house_with_garden:\n:house_with_garden: ${name}\n\n${delta}\n:1234: Available quantity: ${quantity}\n\n:link: Link to access it: https://yam.realtoken.network/offer/${id}\n`;
+            content = {
+                title: name,
+                description: `${delta}\n:1234: Available quantity : ${quantity}\n\n:link: Link to access it : https://yam.realtoken.network/offer/${id}`,
+                color: 16777215,
+                timestamp: new Date(),
+                image: {
+                    url: image
+                }
+            }
             break;
     }
 
-    return blockQuote(content);
+    return { embeds: [content] };
 }
 
 const yamOffer = async () => {
@@ -67,10 +83,10 @@ const yamOffer = async () => {
         return;
     }
 
-    const property = JSON.parse(await readFileSync('json/tokens.json', 'utf-8'));
+    const properties = JSON.parse(await readFileSync('json/tokens.json', 'utf-8'));
 
-    if (!property) {
-        console.error('No property found');
+    if (!properties) {
+        console.error('No retrieved properties');
         return;
     }
 
@@ -82,10 +98,16 @@ const yamOffer = async () => {
         lastIds.id = id;
         writeFileSync('json/lastId.json', JSON.stringify(lastIds));
 
-        const initialPrice = +property.find((prop) => prop.uuid.toLowerCase() === address.toLowerCase())?.tokenPrice;
+        const property = properties.find((prop) => prop.uuid.toLowerCase() === address.toLowerCase());
+        if (!property) {
+            console.error('No property found');
+            continue;
+        }
 
-        if (!initialPrice) {
-            console.error('No initial price found');
+        const { tokenPrice, imageLink } = property;
+
+        if (!tokenPrice) {
+            console.error('No token price found');
             continue;
         }
 
@@ -93,7 +115,7 @@ const yamOffer = async () => {
             continue;
         }
 
-        let deltaPrice = (initialPrice / offer.price.price) * 100 - 100;
+        let deltaPrice = (+tokenPrice / offer.price.price) * 100 - 100;
 
         const users = NODE_ENV === 'prod' ? (
             await UserController.getUsersFromParams({
@@ -110,10 +132,13 @@ const yamOffer = async () => {
             continue;
         }
 
-        if (Math.sign(deltaPrice) > -1) {
-            deltaPrice = `:green_circle: Delta of - ${deltaPrice.toFixed(2)} %`;
-        } else {
-            deltaPrice = `:orange_circle: Delta of + ${deltaPrice.toFixed(2).slice(1)} %`;
+        const generateDeltaPrice = (deltaPrice, lang) => {
+            const deltaValue = Math.abs(deltaPrice).toFixed(2);
+            if (deltaPrice >= 0) {
+                return lang === 'fr' ? `:green_circle: Delta de - ${deltaValue} %` : `:green_circle: Delta of - ${deltaValue} %`;
+            } else {
+                return lang === 'fr' ? `:orange_circle: Delta de + ${deltaValue} %` : `:orange_circle: Delta of + ${deltaValue} %`;
+            }
         }
 
         for (const user of users) {
@@ -121,8 +146,10 @@ const yamOffer = async () => {
             const member = await guild.members.fetch(userId);
             if (!member) continue;
 
-            member.send(blockQuoteContent(deltaPrice, availableAmount, id, name, lang));
+            const deltaPriceMessage = generateDeltaPrice(deltaPrice, lang);
+            member.send(blockQuoteContent(deltaPriceMessage, availableAmount, id, name, imageLink[0], lang));
         }
+
     };
 }
 

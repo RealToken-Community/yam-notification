@@ -1,10 +1,19 @@
 import axios from 'axios';
-import { readFileSync, writeFileSync } from "fs";
+import { writeFileSync } from "fs";
+import 'dotenv/config';
+
+const {
+    API_KEY_COMMUNITY
+} = process.env;
 
 class RealtController {
     static getTokens = async () => {
         try {
-            const response = await axios.get('https://api.realt.community/v1/token');
+            const response = await axios.get('https://api.realt.community/v1/token', {
+                headers: {
+                    'X-AUTH-REALT-TOKEN': API_KEY_COMMUNITY 
+                }
+            });
 
             const data = response.data;
 
