@@ -83,7 +83,7 @@ const yamOffer = async () => {
         return;
     }
 
-    const properties = JSON.parse(await readFileSync('json/tokens.json', 'utf-8'));
+    const properties = JSON.parse(readFileSync('json/tokens.json', 'utf-8'));
 
     if (!properties) {
         console.error('No retrieved properties');
@@ -264,7 +264,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 });
 
 client.on('messageCreate', async message => {
-    if (message.author.bot || CHANNEL_COMMANDS === message.channelId) {
+    if (message.author.bot || CHANNEL_COMMANDS !== message.channelId) {
         return;
     }
 

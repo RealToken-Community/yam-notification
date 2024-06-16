@@ -15,7 +15,11 @@ class RealtController {
                 }
             });
 
-            const data = response.data;
+            const data = response?.data?.map((token) => ({
+                uuid: token.uuid,
+                tokenPrice: token.tokenPrice,
+                imageLink: token.imageLink,
+            }));
 
             if (!data || !data.length) {
                 throw new Error('No data found', response);
