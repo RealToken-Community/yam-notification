@@ -19,6 +19,7 @@ class RealtController {
                 uuid: token.uuid,
                 tokenPrice: token.tokenPrice,
                 imageLink: token.imageLink,
+                propertyType: token.propertyType
             }));
 
             if (!data || !data.length) {
@@ -40,7 +41,7 @@ class RealtController {
                 "operationName": "getOffers"
             });
 
-            if (!response.data || !response.data.data || !response.data.data.yamGnosis || !response.data.data.yamGnosis.offers) {
+            if (!response?.data?.data?.yamGnosis?.offers) {
                 throw new Error('No data found', response);
             }
 

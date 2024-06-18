@@ -8,6 +8,7 @@ import 'dotenv/config';
 import RealtController from '../controllers/realtController.js';
 import UserController from '../controllers/userController.js';
 import commands from './commands.js';
+import { flags, typePropertyNames } from '../_constants/index.js';
 
 const {
     NODE_ENV,
@@ -30,7 +31,6 @@ const client = new Client({
     ]
 });
 
-const flags = ['🇺🇸', '🇫🇷'];
 let lastIds = {};
 let params = {};
 let messageAlertId;
@@ -104,7 +104,7 @@ const yamOffer = async () => {
             continue;
         }
 
-        const { tokenPrice, imageLink } = property;
+        const { tokenPrice, imageLink, propertyType } = property;
 
         if (!tokenPrice) {
             console.error('No token price found');
@@ -121,7 +121,8 @@ const yamOffer = async () => {
             await UserController.getUsersFromParams({
                 deltaPrice: deltaPrice * -1,
                 availableAmount,
-                blacklist: address
+                blacklist: address,
+                typeProperty: propertyType
             })
         ) : (
             NODE_ENV === 'dev' && USER_TEST_ID
@@ -294,25 +295,29 @@ client.on('interactionCreate', async interaction => {
                 return;
             }
 
-            const { deltaMin, quantityMin, blacklist } = existUser;
+            const { deltaMin, quantityMin, blacklist, typeProperty } = existUser;
 
-            const blacklistList = blacklist?.join('\n') || 'Aucune';
+            const blacklistList = blacklist?.join('\n') || 'None';
 
             const embed = {
-                "title": "Your current settings for alerts",
-                "color": 16711680,
-                "fields": [
+                title: "Your current settings for alerts",
+                color: 16711680,
+                fields: [
                     {
-                        "name": "Value (in %) relative to the initial token price that you accept",
-                        "value": `${deltaMin}%`
+                        name: "Value (in %) relative to the initial token price that you accept",
+                        value: deltaMin
                     },
                     {
-                        "name": "Minimum quantity (0 = accepts any quantity)",
-                        "value": `${quantityMin}`
+                        name: "Minimum quantity (0 = accepts any quantity)",
+                        value: quantityMin
                     },
                     {
-                        "name": "Blacklisted properties",
-                        "value": `${blacklistList}`
+                        name: "Blacklisted properties",
+                        value: blacklistList
+                    },
+                    {
+                        name: "Type property",
+                        value: typePropertyNames[typeProperty]
                     }
                 ]
             };
@@ -334,15 +339,16 @@ client.on('interactionCreate', async interaction => {
                 userId: user.id,
                 deltaMin: options.getString('delta'),
                 quantityMin: options.getNumber('quantity'),
+                typeProperty: options.getNumber('type_property'),
                 blacklist: options.getString('blacklist')
             });
 
             if (!editUser) {
-                await interaction.reply({ content: 'Erreur lors de la modification de vos paramètres.', ephemeral: true });
+                await interaction.reply({ content: 'Error while modifying your settings.', ephemeral: true });
                 return;
             }
 
-            await interaction.reply({ content: 'Vos paramètres ont été modifiés.', ephemeral: true });
+            await interaction.reply({ content: 'Your settings have been changed.', ephemeral: true });
             return;
         }
         case 'blacklist_add': {
@@ -438,20 +444,24 @@ const onReady = async () => {
         "To receive notifications about YAM offers, click on the **⏰ reaction below.**",
         "Hello, choose the language of your future alerts by reacting with one of the available flags.",
         {
-            "title": "Default settings for alerts",
-            "color": 16777215,
-            "fields": [
+            title: "Default settings for alerts",
+            color: 16777215,
+            fields: [
                 {
-                    "name": "Value (in %) relative to the initial token price that you accept",
-                    "value": `${deltaMin}%`
+                    name: "Value (in %) relative to the initial token price that you accept",
+                    value: `${deltaMin}%`
                 },
                 {
-                    "name": "Minimum quantity (0 = accepts any quantity)",
-                    "value": `${quantityMin}`
+                    name: "Minimum quantity (0 = accepts any quantity)",
+                    value: `${quantityMin}`
                 },
                 {
-                    "name": "Blacklisted properties",
-                    "value": "None"
+                    name: "Blacklisted properties",
+                    value: "None"
+                },
+                {
+                    name: "Type property",
+                    value: "All"
                 }
             ]
         },

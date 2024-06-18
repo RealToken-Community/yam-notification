@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
+import { typePropertyNames } from '../_constants/index.js';
 
 export default [
     new SlashCommandBuilder()
@@ -17,7 +18,19 @@ export default [
                 .setDescription('Minimum quantity value')
                 .setRequired(false)
                 .setMinValue(0)
-                .setMaxValue(1000)),
+                .setMaxValue(1000))
+        .addNumberOption(option =>
+            option.setName('type_property')
+                .setDescription('Property type')
+                .setRequired(false)
+                .addChoices(
+                    ...typePropertyNames.reduce((acc, name, index) => {
+                        if (name) {
+                            acc.push({ name, value: index });
+                        }
+                        return acc;
+                    }, [])
+                )),
 
     new SlashCommandBuilder()
         .setName('blacklist_add')

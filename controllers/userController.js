@@ -8,7 +8,8 @@ class UserController {
             const user = await mysqlQuery(`
                 select 
                     deltaMin,
-                    quantityMin
+                    quantityMin,
+                    typeProperty
                 from 
                     user u
                 where u.userId = ${userId}
@@ -32,7 +33,7 @@ class UserController {
 
     static getUsersFromParams = async (request) => {
         try {
-            const { deltaPrice, availableAmount, blacklist } = request;
+            const { deltaPrice, availableAmount, blacklist, typeProperty } = request;
 
             const users = await mysqlQuery(`
             SELECT 
@@ -52,9 +53,13 @@ class UserController {
                     WHERE b2.userId = u.userId 
                     AND b2.item = ?
                 )
+                AND (
+                    typeProperty = ? 
+                    OR typeProperty = 0
+                )
             GROUP BY 
                 u.userId;
-            `, [deltaPrice, availableAmount, blacklist]);
+            `, [deltaPrice, availableAmount, blacklist, +typeProperty]);
 
             return users;
         } catch (error) {
@@ -64,7 +69,7 @@ class UserController {
 
     static editUser = async (request) => {
         try {
-            const { userId, deltaMin, quantityMin } = request;
+            const { userId, deltaMin, quantityMin, typeProperty } = request;
 
             const user = {};
 
@@ -80,6 +85,10 @@ class UserController {
 
             if (quantityMin !== null && quantityMin !== undefined) {
                 user.quantityMin = quantityMin;
+            }
+
+            if (typeProperty !== null && typeProperty !== undefined) {
+                user.typeProperty = typeProperty;
             }
 
             if (Object.keys(user).length === 0) {
