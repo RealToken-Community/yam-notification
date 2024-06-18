@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    container_name: prod-yam_notification-app
+    env_file:
+    - .env
+#    ports:
+#      - '3013:3000'
+    networks:
+#      - traefik-realt
+      - yam-notifs
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.dashboard-prod.rule=Host(`dashboard.realt.community`)"
+#      - "traefik.http.routers.dashboard-prod.entrypoints=websecure"
+    restart: always
+
+  db:
+    image: mysql:5.7
+    container_name: prod-yam_notification-db
+#    ports:
+#      - "3306:3306"
+    networks:
+      - yam-notifs
+    environment:
+      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+      - "MYSQL_USER=${MYSQL_USER}"
+      - "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
+      - "MYSQL_DATABASE=${MYSQL_DATABASE}"
+    volumes:
+      - ./dump.sql:/docker-entrypoint-initdb.d/0_init.sql
+    restart: always
+
+networks:
+  yam-notifs:
+#  traefik-realt:
+#    external: true
