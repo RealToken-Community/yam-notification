@@ -30,7 +30,7 @@ CREATE TABLE `blacklist` (
   `id` int NOT NULL,
   `userId` varchar(18) NOT NULL,
   `item` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -39,13 +39,13 @@ CREATE TABLE `blacklist` (
 --
 
 CREATE TABLE `user` (
-  `userId` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `userId` varchar(25) CHARACTER SET utf8mb4 NOT NULL,
   `deltaMin` decimal(10,2) NOT NULL,
   `quantityMin` decimal(10,2) NOT NULL,
   `typeProperty` int NOT NULL DEFAULT '0',
   `lang` varchar(2) NOT NULL DEFAULT 'en',
   `archivedAt` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Index pour les tables déchargées

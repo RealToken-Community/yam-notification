@@ -1,4 +1,4 @@
-FROM node:16.15.0-alpine as build 
+FROM node:18.18.0 as build 
 
 WORKDIR /app
 
