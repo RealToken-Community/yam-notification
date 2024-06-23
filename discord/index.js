@@ -19,8 +19,7 @@ const {
     ROLE_EN,
     GUILD_ID,
     APPLICATION_ID,
-    CHANNEL_INFORMATION,
-    CHANNEL_COMMANDS,
+    CHANNEL_SETTING
 } = process.env;
 
 const client = new Client({
@@ -180,7 +179,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 quantityMin,
                 blacklist
             });
-            await user.send('You have activated alerts for YAM offers. To modify your alert settings, go to the channel <#' + CHANNEL_COMMANDS + '> and use the `/edit` command.');
+            await user.send('You have activated alerts for YAM offers. To modify your alert settings, go to the channel <#' + CHANNEL_SETTING + '> and use the `/edit` command.');
             return;
         }
 
@@ -268,7 +267,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 });
 
 client.on('messageCreate', async message => {
-    if (message.author.bot || CHANNEL_COMMANDS !== message.channelId) {
+    if (message.author.bot || CHANNEL_SETTING !== message.channelId) {
         return;
     }
 
@@ -282,8 +281,8 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    if (channelId !== CHANNEL_COMMANDS) {
-        await interaction.reply({ content: `You can only execute this command in the channel <#${CHANNEL_COMMANDS}>.`, ephemeral: true });
+    if (channelId !== CHANNEL_SETTING) {
+        await interaction.reply({ content: `You can only execute this command in the channel <#${CHANNEL_SETTING}>.`, ephemeral: true });
         return;
     }
 
@@ -294,7 +293,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: `You are not registered. Please register by clicking on the ⏰ reaction in the <#${CHANNEL_INFORMATION}> channel.`, ephemeral: true });
+                await interaction.reply({ content: `You are not registered. Please register by clicking on the ⏰ reaction in the <#${CHANNEL_SETTING}> channel.`, ephemeral: true });
                 return;
             }
 
@@ -338,7 +337,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_INFORMATION + '> channel.', ephemeral: true });
+                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_SETTING + '> channel.', ephemeral: true });
                 return;
             }
 
@@ -365,7 +364,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_INFORMATION + '> channel.', ephemeral: true });
+                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_SETTING + '> channel.', ephemeral: true });
                 return;
             }
 
@@ -388,7 +387,7 @@ client.on('interactionCreate', async interaction => {
             });
 
             if (!existUser) {
-                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_INFORMATION + '> channel.', ephemeral: true });
+                await interaction.reply({ content: 'You are not registered. Please register by clicking on the ⏰ reaction in the <#' + CHANNEL_SETTING + '> channel.', ephemeral: true });
                 return;
             }
 
@@ -446,7 +445,7 @@ const onReady = async () => {
 
     await RealtController.getTokens();
 
-    const channelInformation = client.channels.cache.get(CHANNEL_INFORMATION);
+    const channelInformation = client.channels.cache.get(CHANNEL_SETTING);
     if (!channelInformation) console.log('Channel not found');
 
     const messagesInformation = [
@@ -478,7 +477,7 @@ const onReady = async () => {
                 }
             ]
         },
-        "To modify your alert settings, go to the <#" + CHANNEL_COMMANDS + "> channel and use the `/edit` command."
+        "----------------------\n\n**The commands you can use below are only usable in this channel**\n\n\`/me\` : To view your personal settings.\n\n\`/edit\` : To modify your settings\n* **yield** : Yield (that you accept with new price of the offer)\n* **delta** : Delta Price (value (in %) relative to the initial token price that you accept)\n* **quantity** Minimum quantity (0 = accepts any quantity)\n* **type_property** The type of property you want\n\n\`/blacklist_add\` : To add a property to the blacklist\n\n\`/blacklist_delete\` : To remove a property from the blacklist"
     ];
 
     const fetchedMessages = Array.from((await channelInformation.messages.fetch({ after: '1', limit: messagesInformation.length })).values()).reverse();
