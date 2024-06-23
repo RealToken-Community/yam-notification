@@ -19,7 +19,8 @@ class RealtController {
                 uuid: token.uuid,
                 tokenPrice: token.tokenPrice,
                 imageLink: token.imageLink,
-                propertyType: token.propertyType
+                propertyType: token.propertyType,
+                annualPercentageYield: token.annualPercentageYield
             }));
 
             if (!data || !data.length) {
@@ -37,7 +38,7 @@ class RealtController {
 
         try {
             const response = await axios.post('https://api.realtoken.network/graphql', {
-                "query": `query getOffers {\n  yamGnosis {\n    offers(first: ${first}, orderBy: ${orderBy}, orderDirection: ${orderDirection}) {\n      id\n      seller {\n        id\n        address\n        __typename\n      }\n      offerToken {\n        address\n        name\n        symbol\n        tokenType\n      }\n      price {\n        price\n        amount\n      }\n      buyerToken {\n        name\n        symbol\n        address\n      }\n      removedAtBlock\n      availableAmount\n      createdAtTimestamp\n    }\n  }\n}`,
+                "query": `query getOffers {\n  yamGnosis {\n    offers(first: ${first}, orderBy: ${orderBy}, orderDirection: ${orderDirection}) {\n      id\n      seller {\n        id\n        address\n        __typename\n      }\n      offerToken {\n        address\n        name\n        decimals\n        symbol\n        tokenType\n        __typename\n      }\n      price {\n        price\n        amount\n        __typename\n      }\n      buyerToken {\n        name\n        symbol\n        address\n        decimals\n        tokenType\n        __typename\n      }\n      buyer {\n        address\n        __typename\n      }\n      removedAtBlock\n      availableAmount\n      createdAtTimestamp\n      __typename\n    }\n    __typename\n  }\n}`,
                 "operationName": "getOffers"
             });
 

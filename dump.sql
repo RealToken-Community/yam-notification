@@ -43,6 +43,7 @@ CREATE TABLE `user` (
   `deltaMin` decimal(10,2) NOT NULL,
   `quantityMin` decimal(10,2) NOT NULL,
   `typeProperty` int NOT NULL DEFAULT '0',
+  'yieldMin' decimal(10,2) NOT NULL,
   `lang` varchar(2) NOT NULL DEFAULT 'en',
   `archivedAt` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

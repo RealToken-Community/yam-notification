@@ -9,10 +9,18 @@ export default [
     new SlashCommandBuilder()
         .setName('edit')
         .setDescription('Edit parameters for yourself')
-        .addStringOption(option =>
+        .addNumberOption(option =>
+            option.setName('yield')
+                .setDescription('Minimum annual percentage yield')
+                .setRequired(false)
+                .setMinValue(0)
+                .setMaxValue(100))
+        .addNumberOption(option =>
             option.setName('delta')
-                .setDescription('Minimum delta value (valeur minimale = -100)')
-                .setRequired(false))
+                .setDescription('Minimum delta value (minimal value = -100)')
+                .setRequired(false)
+                .setMinValue(-100)
+                .setMaxValue(1000))
         .addNumberOption(option =>
             option.setName('quantity')
                 .setDescription('Minimum quantity value')
@@ -31,7 +39,6 @@ export default [
                         return acc;
                     }, [])
                 )),
-
     new SlashCommandBuilder()
         .setName('blacklist_add')
         .setDescription('Add property in blacklist')

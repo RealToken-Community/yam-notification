@@ -7,6 +7,7 @@ class UserController {
 
             const user = await mysqlQuery(`
                 select 
+                    yieldMin,
                     deltaMin,
                     quantityMin,
                     typeProperty
@@ -33,7 +34,7 @@ class UserController {
 
     static getUsersFromParams = async (request) => {
         try {
-            const { deltaPrice, availableAmount, blacklist, typeProperty } = request;
+            const { newYield, deltaPrice, availableAmount, blacklist, typeProperty } = request;
 
             const users = await mysqlQuery(`
             SELECT 
@@ -44,7 +45,8 @@ class UserController {
             LEFT JOIN 
                 blacklist b ON u.userId = b.userId
             WHERE 
-                u.deltaMin >= ?
+                u.yieldMin <= ?
+                AND u.deltaMin <= ?
                 AND u.quantityMin <= ?
                 AND u.archivedAt IS NULL
                 AND NOT EXISTS (
@@ -59,7 +61,7 @@ class UserController {
                 )
             GROUP BY 
                 u.userId;
-            `, [deltaPrice, availableAmount, blacklist, +typeProperty]);
+            `, [newYield, deltaPrice, availableAmount, blacklist, +typeProperty]);
 
             return users;
         } catch (error) {
@@ -69,18 +71,16 @@ class UserController {
 
     static editUser = async (request) => {
         try {
-            const { userId, deltaMin, quantityMin, typeProperty } = request;
+            const { yieldMin, userId, deltaMin, quantityMin, typeProperty } = request;
 
             const user = {};
 
+            if (yieldMin !== null && yieldMin !== undefined) {
+                user.yieldMin = yieldMin;
+            }
+
             if (deltaMin !== null && deltaMin !== undefined) {
-                const deltaMinFloat = +deltaMin;
-
-                if (isNaN(deltaMinFloat)) {
-                    return this.error('Delta value is not a valid number');
-                }
-
-                user.deltaMin = deltaMinFloat;
+                user.deltaMin = deltaMin;
             }
 
             if (quantityMin !== null && quantityMin !== undefined) {
@@ -109,13 +109,13 @@ class UserController {
 
     static newUser = async (request) => {
         try {
-            const { userId, deltaMin, quantityMin } = request;
+            const { userId, deltaMin, yieldMin, quantityMin } = request;
 
             await mysqlQuery(`
-                INSERT INTO user (userId, deltaMin, quantityMin)
-                VALUES (?, ?, ?)
+                INSERT INTO user (userId, deltaMin, yieldMin, quantityMin)
+                VALUES (?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE archivedAt = NULL
-            `, [userId, deltaMin, quantityMin]);
+            `, [userId, deltaMin, yieldMin, quantityMin]);
 
             return true;
         } catch (error) {

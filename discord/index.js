@@ -36,13 +36,13 @@ let params = {};
 let messageAlertId;
 let messageLanguageId;
 
-const blockQuoteContent = (delta, quantity, id, name, image, lang = 'en') => {
+const blockQuoteContent = (delta, quantity, yieldYear, id, name, image, lang = 'en') => {
     let content;
     switch (lang) {
         case 'fr':
             content = {
                 title: name,
-                description: `${delta}\n:1234: Quantité disponible : ${quantity}\n\n:link: Lien pour y accéder : https://yam.realtoken.network/offer/${id}`,
+                description: `Yield de \`${yieldYear}\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\`\n\n:link: Lien pour y accéder : https://yam.realtoken.network/offer/${id}`,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
@@ -53,7 +53,7 @@ const blockQuoteContent = (delta, quantity, id, name, image, lang = 'en') => {
         case 'en':
             content = {
                 title: name,
-                description: `${delta}\n:1234: Available quantity : ${quantity}\n\n:link: Link to access it : https://yam.realtoken.network/offer/${id}`,
+                description: `Offer Yield of \`${yieldYear}\`\n${delta}\n:1234: Available quantity : \`${quantity}\`\n\n:link: Link to access it : https://yam.realtoken.network/offer/${id}`,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
@@ -104,7 +104,7 @@ const yamOffer = async () => {
             continue;
         }
 
-        const { tokenPrice, imageLink, propertyType } = property;
+        const { tokenPrice, imageLink, propertyType, annualPercentageYield } = property;
 
         if (!tokenPrice) {
             console.error('No token price found');
@@ -115,11 +115,13 @@ const yamOffer = async () => {
             continue;
         }
 
-        let deltaPrice = (+tokenPrice / offer.price.price) * 100 - 100;
+        const newYield = (annualPercentageYield * +tokenPrice) / +offer.price.price;
+        const deltaPrice = (+tokenPrice / +offer.price.price) * 100 - 100;
 
         const users = NODE_ENV === 'prod' ? (
             await UserController.getUsersFromParams({
-                deltaPrice: deltaPrice * -1,
+                newYield,
+                deltaPrice,
                 availableAmount,
                 blacklist: address,
                 typeProperty: propertyType
@@ -136,9 +138,9 @@ const yamOffer = async () => {
         const generateDeltaPrice = (deltaPrice, lang) => {
             const deltaValue = Math.abs(deltaPrice).toFixed(2);
             if (deltaPrice >= 0) {
-                return lang === 'fr' ? `:green_circle: Delta de - ${deltaValue} %` : `:green_circle: Delta of - ${deltaValue} %`;
+                return lang === 'fr' ? `:green_circle: Delta de \`- ${deltaValue} %\`` : `:green_circle: Delta of \`- ${deltaValue} %\``;
             } else {
-                return lang === 'fr' ? `:orange_circle: Delta de + ${deltaValue} %` : `:orange_circle: Delta of + ${deltaValue} %`;
+                return lang === 'fr' ? `:orange_circle: Delta de \`+ ${deltaValue} %\`` : `:orange_circle: Delta of \`+ ${deltaValue} %\``;
             }
         }
 
@@ -148,7 +150,7 @@ const yamOffer = async () => {
             if (!member) continue;
 
             const deltaPriceMessage = generateDeltaPrice(deltaPrice, lang);
-            member.send(blockQuoteContent(deltaPriceMessage, availableAmount, id, name, imageLink[0], lang));
+            member.send(blockQuoteContent(deltaPriceMessage, availableAmount, annualPercentageYield, id, name, imageLink[0], lang));
         }
 
     };
@@ -169,11 +171,12 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
             await member.roles.add(ROLE_ALERT);
 
-            const { deltaMin, quantityMin, blacklist } = params.yamlowprice;
+            const { deltaMin, yieldMin, quantityMin, blacklist } = params.yamlowprice;
 
             await UserController.newUser({
                 userId: user.id,
                 deltaMin,
+                yieldMin,
                 quantityMin,
                 blacklist
             });
@@ -295,7 +298,7 @@ client.on('interactionCreate', async interaction => {
                 return;
             }
 
-            const { deltaMin, quantityMin, blacklist, typeProperty } = existUser;
+            const { deltaMin, yieldMin, quantityMin, blacklist, typeProperty } = existUser;
 
             const blacklistList = blacklist?.join('\n') || 'None';
 
@@ -304,7 +307,11 @@ client.on('interactionCreate', async interaction => {
                 color: 16711680,
                 fields: [
                     {
-                        name: "Value (in %) relative to the initial token price that you accept",
+                        name: "Yield (that you accept with new price of the offer)",
+                        value: yieldMin
+                    },
+                    {
+                        name: "Delta Price (value (in %) relative to the initial token price that you accept)",
                         value: deltaMin
                     },
                     {
@@ -337,7 +344,8 @@ client.on('interactionCreate', async interaction => {
 
             const editUser = await UserController.editUser({
                 userId: user.id,
-                deltaMin: options.getString('delta'),
+                yieldMin: options.getNumber('yield'),
+                deltaMin: options.getNumber('delta'),
                 quantityMin: options.getNumber('quantity'),
                 typeProperty: options.getNumber('type_property'),
                 blacklist: options.getString('blacklist')
@@ -418,7 +426,8 @@ const onReady = async () => {
         writeFileSync('json/params.json', JSON.stringify({
             yamlowprice: {
                 deltaMin: 10,
-                quantityMin: 1
+                yieldMin: 0,
+                quantityMin: 0
             }
         }));
         console.log('json/params.json created.');
@@ -433,7 +442,7 @@ const onReady = async () => {
     lastIds = JSON.parse(readFileSync('json/lastId.json', 'utf-8'));
 
     params = JSON.parse(readFileSync('json/params.json', 'utf-8'));
-    const { deltaMin, quantityMin } = params.yamlowprice;
+    const { deltaMin, yieldMin, quantityMin } = params.yamlowprice;
 
     await RealtController.getTokens();
 
@@ -448,20 +457,24 @@ const onReady = async () => {
             color: 16777215,
             fields: [
                 {
-                    name: "Value (in %) relative to the initial token price that you accept",
-                    value: `${deltaMin}%`
+                    name: "Yield (that you accept with new price of the offer)",
+                    value: `\`${yieldMin} %\``
+                },
+                {
+                    name: "Delta Price (value (in %) relative to the initial token price that you accept)",
+                    value: `\`${deltaMin} %\``
                 },
                 {
                     name: "Minimum quantity (0 = accepts any quantity)",
-                    value: `${quantityMin}`
+                    value: `\`${quantityMin}\``
                 },
                 {
                     name: "Blacklisted properties",
-                    value: "None"
+                    value: "\`None\`"
                 },
                 {
                     name: "Type property",
-                    value: "All"
+                    value: "\`All\`"
                 }
             ]
         },
