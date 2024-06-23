@@ -40,23 +40,31 @@ const blockQuoteContent = (delta, quantity, yieldYear, id, name, image, lang = '
     switch (lang) {
         case 'fr':
             content = {
-                title: name,
-                description: `Yield de \`${yieldYear}\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\`\n\n:link: Lien pour y accéder : https://yam.realtoken.network/offer/${id}`,
+                title: `:link: ${name}`,
+                url: `https://yam.realtoken.network/offer/${id}`,
+                description: `:chart_with_upwards_trend: Yield de \`${yieldYear} %\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\``,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
                     url: image
+                },
+                footer: {
+                    text: 'Clique sur le titre pour accéder à l\'offre'
                 }
             }
             break;
         case 'en':
             content = {
-                title: name,
-                description: `Offer Yield of \`${yieldYear}\`\n${delta}\n:1234: Available quantity : \`${quantity}\`\n\n:link: Link to access it : https://yam.realtoken.network/offer/${id}`,
+                title: `:link: ${name}`,
+                url: `https://yam.realtoken.network/offer/${id}`,
+                description: `:chart_with_upwards_trend: Offer Yield of \`${yieldYear} %\`\n${delta}\n:1234: Available quantity : \`${quantity}\``,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
                     url: image
+                },
+                footer: {
+                    text: 'Click on the title to access the offer'
                 }
             }
             break;
@@ -120,7 +128,7 @@ const yamOffer = async () => {
         const users = NODE_ENV === 'prod' ? (
             await UserController.getUsersFromParams({
                 newYield,
-                deltaPrice,
+                deltaPrice: deltaPrice * -1,
                 availableAmount,
                 blacklist: address,
                 typeProperty: propertyType

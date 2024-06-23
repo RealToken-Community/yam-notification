@@ -46,7 +46,7 @@ class UserController {
                 blacklist b ON u.userId = b.userId
             WHERE 
                 u.yieldMin <= ?
-                AND u.deltaMin <= ?
+                AND u.deltaMin >= ?
                 AND u.quantityMin <= ?
                 AND u.archivedAt IS NULL
                 AND NOT EXISTS (
