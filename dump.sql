@@ -40,7 +40,7 @@ CREATE TABLE `blacklist` (
 
 CREATE TABLE `user` (
   `userId` varchar(25) CHARACTER SET utf8mb4 NOT NULL,
-  `deltaMin` decimal(10,2) NOT NULL,
+  `deltaMax` decimal(10,2) NOT NULL,
   `quantityMin` decimal(10,2) NOT NULL,
   `typeProperty` int NOT NULL DEFAULT '0',
   'yieldMin' decimal(10,2) NOT NULL,

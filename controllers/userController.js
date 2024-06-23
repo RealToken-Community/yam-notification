@@ -8,7 +8,7 @@ class UserController {
             const user = await mysqlQuery(`
                 select 
                     yieldMin,
-                    deltaMin,
+                    deltaMax,
                     quantityMin,
                     typeProperty
                 from 
@@ -46,7 +46,7 @@ class UserController {
                 blacklist b ON u.userId = b.userId
             WHERE 
                 u.yieldMin <= ?
-                AND u.deltaMin >= ?
+                AND u.deltaMax >= ?
                 AND u.quantityMin <= ?
                 AND u.archivedAt IS NULL
                 AND NOT EXISTS (
@@ -71,7 +71,7 @@ class UserController {
 
     static editUser = async (request) => {
         try {
-            const { yieldMin, userId, deltaMin, quantityMin, typeProperty } = request;
+            const { yieldMin, userId, deltaMax, quantityMin, typeProperty } = request;
 
             const user = {};
 
@@ -79,8 +79,8 @@ class UserController {
                 user.yieldMin = yieldMin;
             }
 
-            if (deltaMin !== null && deltaMin !== undefined) {
-                user.deltaMin = deltaMin;
+            if (deltaMax !== null && deltaMax !== undefined) {
+                user.deltaMax = deltaMax;
             }
 
             if (quantityMin !== null && quantityMin !== undefined) {
@@ -109,13 +109,13 @@ class UserController {
 
     static newUser = async (request) => {
         try {
-            const { userId, deltaMin, yieldMin, quantityMin } = request;
+            const { userId, deltaMax, yieldMin, quantityMin } = request;
 
             await mysqlQuery(`
-                INSERT INTO user (userId, deltaMin, yieldMin, quantityMin)
+                INSERT INTO user (userId, deltaMax, yieldMin, quantityMin)
                 VALUES (?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE archivedAt = NULL
-            `, [userId, deltaMin, yieldMin, quantityMin]);
+            `, [userId, deltaMax, yieldMin, quantityMin]);
 
             return true;
         } catch (error) {

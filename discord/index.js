@@ -30,7 +30,7 @@ const client = new Client({
     ]
 });
 
-let lastIds = {};
+let lastId = {};
 let params = {};
 let messageAlertId;
 let messageLanguageId;
@@ -83,7 +83,7 @@ const yamOffer = async () => {
     });
 
     const newOffer = offers
-        .filter((offer) => offer.id > lastIds.id)
+        .filter((offer) => offer.id > lastId.id)
         .sort((a, b) => a.id - b.id);
 
     if (!newOffer.length) {
@@ -102,8 +102,8 @@ const yamOffer = async () => {
         const { id, availableAmount, offerToken, buyer } = offer;
         const { address, name } = offerToken;
 
-        lastIds.id = id;
-        writeFileSync('json/lastId.json', JSON.stringify(lastIds));
+        lastId.id = id;
+        writeFileSync('json/lastId.json', JSON.stringify(lastId));
 
         const property = properties.find((prop) => prop.uuid.toLowerCase() === address.toLowerCase());
         if (!property) {
@@ -178,11 +178,11 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
             await member.roles.add(ROLE_ALERT);
 
-            const { deltaMin, yieldMin, quantityMin, blacklist } = params.yamlowprice;
+            const { deltaMax, yieldMin, quantityMin, blacklist } = params.yamlowprice;
 
             await UserController.newUser({
                 userId: user.id,
-                deltaMin,
+                deltaMax,
                 yieldMin,
                 quantityMin,
                 blacklist
@@ -305,7 +305,7 @@ client.on('interactionCreate', async interaction => {
                 return;
             }
 
-            const { deltaMin, yieldMin, quantityMin, blacklist, typeProperty } = existUser;
+            const { deltaMax, yieldMin, quantityMin, blacklist, typeProperty } = existUser;
 
             const blacklistList = blacklist?.join('\n') || 'None';
 
@@ -318,8 +318,8 @@ client.on('interactionCreate', async interaction => {
                         value: yieldMin
                     },
                     {
-                        name: "Delta Price (value (in %) relative to the initial token price that you accept)",
-                        value: deltaMin
+                        name: "Delta Price (max value (in %) relative to the initial token price that you accept)",
+                        value: deltaMax
                     },
                     {
                         name: "Minimum quantity (0 = accepts any quantity)",
@@ -352,7 +352,7 @@ client.on('interactionCreate', async interaction => {
             const editUser = await UserController.editUser({
                 userId: user.id,
                 yieldMin: options.getNumber('yield'),
-                deltaMin: options.getNumber('delta'),
+                deltaMax: options.getNumber('delta'),
                 quantityMin: options.getNumber('quantity'),
                 typeProperty: options.getNumber('type_property'),
                 blacklist: options.getString('blacklist')
@@ -432,7 +432,7 @@ const onReady = async () => {
         closeSync(openSync('json/params.json', 'w'))
         writeFileSync('json/params.json', JSON.stringify({
             yamlowprice: {
-                deltaMin: 10,
+                deltaMax: 10,
                 yieldMin: 0,
                 quantityMin: 0
             }
@@ -446,10 +446,10 @@ const onReady = async () => {
         console.log('json/tokens.json created.');
     }
 
-    lastIds = JSON.parse(readFileSync('json/lastId.json', 'utf-8'));
+    lastId = JSON.parse(readFileSync('json/lastId.json', 'utf-8'));
 
     params = JSON.parse(readFileSync('json/params.json', 'utf-8'));
-    const { deltaMin, yieldMin, quantityMin } = params.yamlowprice;
+    const { deltaMax, yieldMin, quantityMin } = params.yamlowprice;
 
     await RealtController.getTokens();
 
@@ -468,8 +468,8 @@ const onReady = async () => {
                     value: `\`${yieldMin} %\``
                 },
                 {
-                    name: "Delta Price (value (in %) relative to the initial token price that you accept)",
-                    value: `\`${deltaMin} %\``
+                    name: "Delta Price (max value (in %) relative to the initial token price that you accept)",
+                    value: `\`${deltaMax} %\``
                 },
                 {
                     name: "Minimum quantity (0 = accepts any quantity)",
