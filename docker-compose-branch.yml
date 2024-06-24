@@ -1,0 +1,28 @@
+services:
+  app:
+    image: ${DOCKER_REGISTRY}/yam-notification:${DOCKER_BRANCH}
+    container_name: ${DOCKER_BRANCH}-yam-notification-app
+    environment:
+      - COMMUNITY_API_KEY=$COMMUNITY_API_KEY
+    env_file:
+      - .env
+    networks:
+      - yam-notifs
+    restart: always
+
+  db:
+    image: mariadb:lts
+    container_name: ${DOCKER_BRANCH}-yam_notification-db
+    environment:
+      - "MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+      - "MARIADB_USER=${MYSQL_USER}"
+      - "MARIADB_PASSWORD=${MYSQL_PASSWORD}"
+      - "MARIADB_DATABASE=${MYSQL_DATABASE}"
+    volumes:
+      - ./dump.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - yam-notifs
+    restart: always
+    
+networks:
+  yam-notifs:

@@ -75,7 +75,7 @@ jobs:
           cd /var/docker/yam-notification/${DOCKER_BRANCH}
           cd /var/docker/${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}/${DOCKER_BRANCH}
           git pull origin ${DOCKER_BRANCH}
-          docker compose --file docker-compose.yml pull
+          docker compose --file docker-compose-branch.yml pull
           docker login -u ${{ secrets.DOCKER_LOGIN }} -p ${{ secrets.DOCKER_PASSWD }} ${DOCKER_REGISTRY}
           COMMUNITY_API_KEY=${{ secrets.COMMUNITY_API_KEY }} \
-          docker compose --project-name ${{ github.ref_name }}-dashboard --file docker-compose.yml up -d'
+          docker compose --project-name ${{ github.ref_name }}-dashboard --file docker-compose-branch.yml up -d'
