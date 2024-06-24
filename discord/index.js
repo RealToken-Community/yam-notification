@@ -35,14 +35,14 @@ let params = {};
 let messageAlertId;
 let messageLanguageId;
 
-const blockQuoteContent = (delta, quantity, yieldYear, id, name, image, lang = 'en') => {
+const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'en') => {
     let content;
     switch (lang) {
         case 'fr':
             content = {
                 title: `:link: ${name}`,
                 url: `https://yam.realtoken.network/offer/${id}`,
-                description: `:chart_with_upwards_trend: Yield de \`${yieldYear} %\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\``,
+                description: `:chart_with_upwards_trend: Yield de \`${newYield} %\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\``,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
@@ -57,7 +57,7 @@ const blockQuoteContent = (delta, quantity, yieldYear, id, name, image, lang = '
             content = {
                 title: `:link: ${name}`,
                 url: `https://yam.realtoken.network/offer/${id}`,
-                description: `:chart_with_upwards_trend: Offer Yield of \`${yieldYear} %\`\n${delta}\n:1234: Available quantity : \`${quantity}\``,
+                description: `:chart_with_upwards_trend: Offer Yield of \`${newYield} %\`\n${delta}\n:1234: Available quantity : \`${quantity}\``,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
@@ -157,7 +157,7 @@ const yamOffer = async () => {
             if (!member) continue;
 
             const deltaPriceMessage = generateDeltaPrice(deltaPrice, lang);
-            member.send(blockQuoteContent(deltaPriceMessage, availableAmount, annualPercentageYield, id, name, imageLink[0], lang));
+            member.send(blockQuoteContent(deltaPriceMessage, availableAmount, newYield, id, name, imageLink[0], lang));
         }
 
     };
