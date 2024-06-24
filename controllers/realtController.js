@@ -3,7 +3,7 @@ import { writeFileSync } from "fs";
 import 'dotenv/config';
 
 const {
-    API_KEY_COMMUNITY
+    COMMUNITY_API_KEY
 } = process.env;
 
 class RealtController {
@@ -11,7 +11,7 @@ class RealtController {
         try {
             const response = await axios.get('https://api.realt.community/v1/token', {
                 headers: {
-                    'X-AUTH-REALT-TOKEN': API_KEY_COMMUNITY 
+                    'X-AUTH-REALT-TOKEN': COMMUNITY_API_KEY
                 }
             });
 
