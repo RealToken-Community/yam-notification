@@ -315,15 +315,15 @@ client.on('interactionCreate', async interaction => {
                 fields: [
                     {
                         name: "Yield (that you accept with new price of the offer)",
-                        value: yieldMin
+                        value: `${yieldMin} %`
                     },
                     {
                         name: "Delta Price (max value (in %) relative to the initial token price that you accept)",
-                        value: deltaMax
+                        value: `${deltaMax} %`
                     },
                     {
                         name: "Minimum quantity (0 = accepts any quantity)",
-                        value: quantityMin
+                        value: `${quantityMin}`
                     },
                     {
                         name: "Blacklisted properties",
