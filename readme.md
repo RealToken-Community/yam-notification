@@ -1,31 +1,26 @@
-# Projet Realt Notification
+# Project Realt Notification
 
-C'est un nouveau projet communautaire ayant pour vocation d'envoyer des alertes/notifications aux utilisateurs concernant les différentes offres du YAM, en fonction des paramètres choisis par chaque utilisateur.
+This is a new community project aimed at sending alerts/notifications to users regarding various YAM offers, based on parameters chosen by each user.
 
-Une fois les notifications activées, vous pourrez paramétrer les alertes que vous recevez afin de ne recevoir que ce qui vous intéresse (ex : variation de prix, quantité, etc.).
+Once notifications are enabled, you can configure the alerts you receive to only get what interests you (e.g., price changes, quantity, yield, etc.).
 
-Pour l'instant, le projet fonctionne uniquement avec Discord, mais il pourra dans un avenir proche fonctionner avec Telegram.
+Currently, the project only works with Discord, but it may soon be compatible with Telegram.
 
-Lien pour accéder au projet : [Discord](https://discord.gg/Fexax4DYYc)
+Link to access the project : [Discord](https://discord.gg/Fexax4DYYc)
 
 ---
 
-## Pour le faire fonctionner en local
+## To run it locally (with Docker)
 
-*Note : une image Docker sera bientôt disponible.*
-
-1. Installer Node.js sur votre machine.
-2. Cloner le projet.
-3. Exécuter la commande `npm i` pour installer les dépendances.
-4. Créer un bot Discord via Discord Developer en lui donnant les accès administrateur.
-5. Créer un serveur Discord privé avec un channel dédié aux messages du bot et un channel dédié aux commandes et un role alert que vous allez indiquer dans le fichier `.env`.
-6. Créer une base de données MySQL et y importer le contenu du fichier `dump.sql`.
-7. Créer un fichier `.env` en suivant le modèle du fichier `.env.dist`.
-8. Démarrer le projet avec la commande `npm run discord` ou utiliser PM2 avec `pm2 start system.config.cjs`.
+1. Clone the project.
+2. Create a Discord bot via Discord Developer and grant it administrator access.
+3. Create a private Discord server with a channel, as well as a role for alerts and two roles for languages (fr and en) which you will specify in the `.env` file.
+4. Create a `.env` file following the model in the `.env.dist` file.
+5. Start the project with the command `docker-service up --build`.
 
 ---
 
 ## Questions
 
-Si vous avez des questions, n'hésitez pas à les poser sur le serveur Discord du projet.
+If you have any questions, feel free to ask them on the project's Discord server.
 
