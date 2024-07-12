@@ -1,4 +1,11 @@
 import mysql from 'mysql';
+import { ethers } from 'ethers';
+import { 
+    GNOSIS_RPC_PROVIDER, 
+    GNOSIS_ABI_YAM, 
+    GNOSIS_CONTRACT_YAM 
+} from '../_constants/index.js';
+
 export const mysqlQuery = async (query, params = null) => {
     return new Promise((resolve, reject) => {
         const con = mysql.createConnection({
@@ -65,3 +72,20 @@ export const mysqlQueryMulti = async (queries) => {
 
     });
 }
+
+export const YAMcontract = new ethers.Contract(GNOSIS_CONTRACT_YAM, GNOSIS_ABI_YAM, new ethers.JsonRpcProvider(GNOSIS_RPC_PROVIDER));
+
+export const formatPrice = (price) => {
+    const priceString = price.toString();
+    const integerPart = priceString.slice(0, 2) || "0";
+    const decimalPart = priceString.slice(2).padEnd(6, '0'); // Ensure there are at least 6 decimal places
+    return `${integerPart}.${decimalPart}`;
+};
+
+export const formatAmount = (amount) => {
+    const amountBigInt = BigInt(amount);
+    const amountString = (amountBigInt / 1000000000000000000n).toString();
+    const decimalString = (amountBigInt % 1000000000000000000n).toString().padStart(18, '0');
+    const formattedDecimal = decimalString.slice(0, 2);
+    return `${amountString}.${formattedDecimal}`;
+};

@@ -7,6 +7,7 @@ import 'dotenv/config';
 
 import RealtController from '../controllers/realtController.js';
 import UserController from '../controllers/userController.js';
+import GnosisController from '../controllers/gnosisController.js';
 import commands from './commands.js';
 import { flags, typePropertyNames } from '../_constants/index.js';
 
@@ -74,21 +75,13 @@ const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'e
 }
 
 const yamOffer = async () => {
-    const guild = client.guilds.cache.get(GUILD_ID);
+    const highOffer = await GnosisController.getOfferCount();
 
-    const offers = await RealtController.getOffers({
-        first: 50,
-        orderBy: 'id',
-        orderDirection: 'desc'
-    });
-
-    const newOffer = offers
-        .filter((offer) => offer.id > lastId.id)
-        .sort((a, b) => a.id - b.id);
-
-    if (!newOffer.length) {
+    if (highOffer <= lastId.id) {
         return;
     }
+
+    writeFileSync('json/lastId.json', JSON.stringify({ id: highOffer }));
 
     const properties = JSON.parse(readFileSync('json/tokens.json', 'utf-8'));
 
@@ -97,40 +90,45 @@ const yamOffer = async () => {
         return;
     }
 
+    const guild = client.guilds.cache.get(GUILD_ID);
 
-    for (const offer of newOffer) {
-        const { id, availableAmount, offerToken, buyer } = offer;
-        const { address, name } = offerToken;
+    for (let offerId = lastId.id + 1; offerId <= highOffer; offerId++) {
+        const offer = await GnosisController.showOffer({ offerId });
 
-        lastId.id = id;
-        writeFileSync('json/lastId.json', JSON.stringify(lastId));
+        if (!offer) {
+            console.error('offer does not exist');
+            continue;
+        }
 
-        const property = properties.find((prop) => prop.uuid.toLowerCase() === address.toLowerCase());
+        const { availableAmount, offerToken, buyer, price } = offer;
+
+        if (buyer) { // if the offer is private
+            continue;
+        }
+
+        const property = properties.find((prop) => prop.uuid.toLowerCase() === offerToken.toLowerCase());
+
         if (!property) {
             console.error('No property found');
             continue;
         }
 
-        const { tokenPrice, imageLink, propertyType, annualPercentageYield } = property;
+        const { tokenPrice, imageLink, propertyType, annualPercentageYield, name } = property;
 
         if (!tokenPrice) {
             console.error('No token price found');
             continue;
         }
 
-        if (buyer) { // if the offer is private
-            continue;
-        }
-
-        const newYield = (annualPercentageYield * +tokenPrice) / +offer.price.price;
-        const deltaPrice = (+tokenPrice / +offer.price.price) * 100 - 100;
+        const newYield = (annualPercentageYield * +tokenPrice) / price
+        const deltaPrice = (+tokenPrice / price) * 100 - 100;
 
         const users = NODE_ENV === 'prod' ? (
             await UserController.getUsersFromParams({
                 newYield,
                 deltaPrice: deltaPrice * -1,
                 availableAmount,
-                blacklist: address,
+                blacklist: offerToken,
                 typeProperty: propertyType
             })
         ) : (
@@ -153,11 +151,15 @@ const yamOffer = async () => {
 
         for (const user of users) {
             const { lang, userId } = user;
-            const member = await guild.members.fetch(userId);
-            if (!member) continue;
 
-            const deltaPriceMessage = generateDeltaPrice(deltaPrice, lang);
-            member.send(blockQuoteContent(deltaPriceMessage, availableAmount, newYield, id, name, imageLink[0], lang));
+            try {
+                const member = await guild.members.fetch(userId);
+
+                const deltaPriceMessage = generateDeltaPrice(deltaPrice, lang);
+                member.send(blockQuoteContent(deltaPriceMessage, availableAmount, newYield, offerId, name, imageLink[0], lang));
+            } catch (error) {
+                continue;
+            }
         }
 
     };
@@ -525,7 +527,7 @@ const onReady = async () => {
         console.error(error);
     }
 
-    schedule('*/30 * * * * *', async () => {
+    schedule('*/5 * * * * *', async () => {
         await yamOffer();
     });
 }

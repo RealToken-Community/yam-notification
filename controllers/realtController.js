@@ -17,6 +17,7 @@ class RealtController {
 
             const data = response?.data?.map((token) => ({
                 uuid: token.uuid,
+                name: token.shortName,
                 tokenPrice: token.tokenPrice,
                 imageLink: token.imageLink,
                 propertyType: token.propertyType,
