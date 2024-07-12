@@ -448,7 +448,9 @@ const onReady = async () => {
         console.log('json/tokens.json created.');
     }
 
-    lastId = JSON.parse(readFileSync('json/lastId.json', 'utf-8'));
+    lastId = await GnosisController.getOfferCount();
+
+    writeFileSync('json/lastId.json', JSON.stringify({ id: lastId }));
 
     params = JSON.parse(readFileSync('json/params.json', 'utf-8'));
     const { deltaMax, yieldMin, quantityMin } = params.yamlowprice;
