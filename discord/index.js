@@ -77,11 +77,11 @@ const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'e
 const yamOffer = async () => {
     const highOffer = await GnosisController.getOfferCount();
 
-    if (highOffer <= lastId.id) {
+    if (highOffer <= lastId) {
         return;
     }
 
-    writeFileSync('json/lastId.json', JSON.stringify({ id: highOffer }));
+    lastId = highOffer;
 
     const properties = JSON.parse(readFileSync('json/tokens.json', 'utf-8'));
 
@@ -92,7 +92,7 @@ const yamOffer = async () => {
 
     const guild = client.guilds.cache.get(GUILD_ID);
 
-    for (let offerId = lastId.id + 1; offerId <= highOffer; offerId++) {
+    for (let offerId = lastId + 1; offerId <= highOffer; offerId++) {
         const offer = await GnosisController.showOffer({ offerId });
 
         if (!offer) {
@@ -424,12 +424,6 @@ const onReady = async () => {
         mkdirSync('json', { recursive: true });
     }
 
-    if (!existsSync('json/lastId.json')) {
-        closeSync(openSync('json/lastId.json', 'w'))
-        writeFileSync('json/lastId.json', JSON.stringify({ "id": "0" }));
-        console.log('json/lastId.json created.');
-    }
-
     if (!existsSync('json/params.json')) {
         closeSync(openSync('json/params.json', 'w'))
         writeFileSync('json/params.json', JSON.stringify({
@@ -449,8 +443,6 @@ const onReady = async () => {
     }
 
     lastId = await GnosisController.getOfferCount();
-
-    writeFileSync('json/lastId.json', JSON.stringify({ id: lastId }));
 
     params = JSON.parse(readFileSync('json/params.json', 'utf-8'));
     const { deltaMax, yieldMin, quantityMin } = params.yamlowprice;
