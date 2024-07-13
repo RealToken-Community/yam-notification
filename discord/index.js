@@ -80,6 +80,8 @@ const yamOffer = async () => {
     if (highOffer <= lastId) {
         return;
     }
+    
+    const rememberLastId = lastId;
 
     lastId = highOffer;
 
@@ -92,7 +94,7 @@ const yamOffer = async () => {
 
     const guild = client.guilds.cache.get(GUILD_ID);
 
-    for (let offerId = lastId + 1; offerId <= highOffer; offerId++) {
+    for (let offerId = rememberLastId + 1; offerId <= highOffer; offerId++) {
         const offer = await GnosisController.showOffer({ offerId });
 
         if (!offer) {
