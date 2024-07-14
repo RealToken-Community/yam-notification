@@ -77,8 +77,8 @@ export const YAMcontract = new ethers.Contract(GNOSIS_CONTRACT_YAM, GNOSIS_ABI_Y
 
 export const formatPrice = (price) => {
     const priceString = price.toString();
-    const integerPart = priceString.slice(0, 2) || "0";
-    const decimalPart = priceString.slice(2).padEnd(6, '0');
+    const integerPart = priceString.slice(0, priceString.length - 6) || "0";
+    const decimalPart = priceString.slice(priceString.length - 6).padEnd(6, '0');
     return `${integerPart}.${decimalPart}`;
 };
 
