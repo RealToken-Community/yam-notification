@@ -9,7 +9,7 @@ import RealtController from '../controllers/realtController.js';
 import UserController from '../controllers/userController.js';
 import GnosisController from '../controllers/gnosisController.js';
 import commands from './commands.js';
-import { flags, typePropertyNames } from '../_constants/index.js';
+import { flags, typePropertyNames, STABLE_COINS } from '../_constants/index.js';
 
 const {
     NODE_ENV,
@@ -36,14 +36,15 @@ let params = {};
 let messageAlertId;
 let messageLanguageId;
 
-const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'en') => {
+const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'en', buyerToken) => {
+    const token = Object.prototype.hasOwnProperty.call(STABLE_COINS, buyerToken) ? STABLE_COINS[buyerToken] : null;
     let content;
     switch (lang) {
         case 'fr':
             content = {
                 title: `:link: ${name}`,
                 url: `https://yam.realtoken.network/offer/${id}`,
-                description: `:chart_with_upwards_trend: Yield de \`${newYield} %\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\``,
+                description: `:chart_with_upwards_trend: Yield de \`${newYield} %\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\`${token ? `\nDevise : ${token.emoji} (${token.name})` : ''}`,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
@@ -58,7 +59,7 @@ const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'e
             content = {
                 title: `:link: ${name}`,
                 url: `https://yam.realtoken.network/offer/${id}`,
-                description: `:chart_with_upwards_trend: Offer Yield of \`${newYield} %\`\n${delta}\n:1234: Available quantity : \`${quantity}\``,
+                description: `:chart_with_upwards_trend: Offer Yield of \`${newYield} %\`\n${delta}\n:1234: Available quantity : \`${quantity}\`${token ? `\nCurrency : ${token.emoji} (${token.name})` : ''}`,
                 color: 16777215,
                 timestamp: new Date(),
                 image: {
@@ -102,13 +103,15 @@ const yamOffer = async () => {
             continue;
         }
 
-        const { availableAmount, offerToken, buyer, price } = offer;
+        const { availableAmount, offerToken, buyerToken, buyer, price } = offer;
+
+        console.log('offer', offer);
 
         if (buyer) { // if the offer is private
             continue;
         }
 
-        const property = properties.find((prop) => prop.uuid.toLowerCase() === offerToken.toLowerCase());
+        const property = properties.find((prop) => prop.uuid.toLowerCase() === offerToken);
 
         if (!property) {
             console.error('No property found');
@@ -158,7 +161,7 @@ const yamOffer = async () => {
                 const member = await guild.members.fetch(userId);
 
                 const deltaPriceMessage = generateDeltaPrice(deltaPrice, lang);
-                member.send(blockQuoteContent(deltaPriceMessage, availableAmount, newYield, offerId, name, imageLink[0], lang));
+                member.send(blockQuoteContent(deltaPriceMessage, availableAmount, newYield, offerId, name, imageLink[0], lang, buyerToken));
             } catch (error) {
                 continue;
             }

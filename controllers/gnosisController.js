@@ -34,8 +34,8 @@ class RealtController {
                 const value = await YAMcontract.showOffer(offerId);
 
                 const formattedValue = {
-                    offerToken: value[0],
-                    buyerToken: value[1],
+                    offerToken: value[0].toLowerCase(),
+                    buyerToken: value[1].toLowerCase(),
                     seller: value[2],
                     buyer: value[3] === '0x0000000000000000000000000000000000000000' ? null : value[3],
                     price: +formatPrice(value[4]),
