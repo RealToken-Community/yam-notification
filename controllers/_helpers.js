@@ -1,4 +1,4 @@
-import mysql from 'mysql';
+import mysql from 'mysql2';
 import { ethers } from 'ethers';
 import { 
     GNOSIS_RPC_PROVIDER, 
