@@ -81,7 +81,7 @@ const yamOffer = async () => {
     if (highOffer <= lastId) {
         return;
     }
-    
+
     const rememberLastId = lastId;
 
     lastId = highOffer;
@@ -105,8 +105,6 @@ const yamOffer = async () => {
 
         const { availableAmount, offerToken, buyerToken, buyer, price } = offer;
 
-        console.log('offer', offer);
-
         if (buyer) { // if the offer is private
             continue;
         }
@@ -118,15 +116,16 @@ const yamOffer = async () => {
             continue;
         }
 
-        const { tokenPrice, imageLink, propertyType, annualPercentageYield, name } = property;
+        const { imageLink, propertyType, annualPercentageYield, name } = property;
+        const tokenPrice = +property.tokenPrice;
 
         if (!tokenPrice) {
             console.error('No token price found');
             continue;
         }
 
-        const newYield = (annualPercentageYield * +tokenPrice) / price
-        const deltaPrice = (+tokenPrice / price) * 100 - 100;
+        const newYield = (annualPercentageYield * tokenPrice) / price;
+        const deltaPrice = ((price - tokenPrice) / tokenPrice) * 100 * -1;
 
         const users = NODE_ENV === 'prod' ? (
             await UserController.getUsersFromParams({
