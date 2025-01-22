@@ -43,7 +43,7 @@ const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'e
         case 'fr':
             content = {
                 title: `:link: ${name}`,
-                url: `https://yam.realtoken.network/offer/${id}`,
+                url: `https://yambyofferid.netlify.app?offerId=${id}`,
                 description: `:chart_with_upwards_trend: Yield de \`${newYield} %\`\n${delta}\n:1234: Quantité disponible : \`${quantity}\`${token ? `\nDevise : ${token.emoji} (${token.name})` : ''}`,
                 color: 16777215,
                 timestamp: new Date(),
@@ -58,7 +58,7 @@ const blockQuoteContent = (delta, quantity, newYield, id, name, image, lang = 'e
         case 'en':
             content = {
                 title: `:link: ${name}`,
-                url: `https://yam.realtoken.network/offer/${id}`,
+                url: `https://yambyofferid.netlify.app?offerId=${id}`,
                 description: `:chart_with_upwards_trend: Offer Yield of \`${newYield} %\`\n${delta}\n:1234: Available quantity : \`${quantity}\`${token ? `\nCurrency : ${token.emoji} (${token.name})` : ''}`,
                 color: 16777215,
                 timestamp: new Date(),
