@@ -11,7 +11,7 @@ services:
       - yam-notifs
 #    labels:
 #      - "traefik.enable=true"
-#      - "traefik.http.routers.dashboard-prod.rule=Host(`dashboard.realt.community`)"
+#      - "traefik.http.routers.dashboard-prod.rule=Host(`dashboard.realtoken.community`)"
 #      - "traefik.http.routers.dashboard-prod.entrypoints=websecure"
     restart: always
 
