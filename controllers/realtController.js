@@ -9,7 +9,7 @@ const {
 class RealtController {
     static getTokens = async () => {
         try {
-            const response = await axios.get('https://api.realt.community/v1/token', {
+            const response = await axios.get('https://api.realtoken.community/v1/token', {
                 headers: {
                     'X-AUTH-REALT-TOKEN': COMMUNITY_API_KEY
                 }
