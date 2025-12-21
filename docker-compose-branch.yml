@@ -26,6 +26,6 @@ services:
     networks:
       - yam-notifs
     restart: unless-stopped
-    
+
 networks:
   yam-notifs:
